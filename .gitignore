@@ -85,3 +85,6 @@ ipython_config.py
 
 thirdpart
 demos
+
+src/openvlp/assets/env
+src/openvlp/assets/models
