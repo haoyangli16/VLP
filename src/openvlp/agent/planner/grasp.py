@@ -1,5 +1,6 @@
 import numpy as np
 from enum import Enum
+import sapien
 
 
 class GraspState(Enum):
@@ -7,6 +8,7 @@ class GraspState(Enum):
     DESCEND = 2
     GRASP = 3
     LIFT = 4
+    FINISHED = 5
 
 
 class GraspMotionPlanner:
@@ -30,12 +32,19 @@ class GraspMotionPlanner:
         self.rotate_idx = 0
         self.is_google_robot = is_google_robot
 
-    def plan_motion(self, object_position, robot_qpos, tcp_pose):
+    def plan_motion(
+        self,
+        object_position: np.ndarray,
+        robot_qpos: np.ndarray,
+        tcp_pose: sapien.Pose,
+        gripper_index: int = -2,
+    ):
         x0, y0, z0 = object_position
+        assert isinstance(tcp_pose, sapien.Pose)
         p, q = tcp_pose.p, tcp_pose.q  # (x, y, z), (w, x, y, z)
         q = np.array([q[1], q[2], q[3], q[0]])  # turn into [x, y, z, w]
         x1, y1, z1 = p
-        self.gripper_pose = robot_qpos[-3]
+        self.gripper_pose = robot_qpos[gripper_index]
 
         # Target orientation (pointing downwards)
 
@@ -50,6 +59,9 @@ class GraspMotionPlanner:
 
         # Calculate position error
         position_error = np.array([x0 - x1, y0 - y1, z0 - z1])
+        print(100 * "-")
+        print(f"tcp_pose: {tcp_pose}")
+        print(f"object_position: {object_position}")
         print("Position error:", position_error)
 
         orientation_error = np.zeros(3)
@@ -72,20 +84,31 @@ class GraspMotionPlanner:
         ]:
             for i in range(3):
                 if i == 2:  # z-axis
-                    error = z1 - target_z
+                    error = target_z - z1
                 else:
                     if self.current_state != GraspState.LIFT:
                         error = position_error[i]
                     else:
-                        error = 0
+                        error = 0.0
 
-                ee_action[i] = np.clip(
-                    -error, -self.ee_action_scale, self.ee_action_scale
-                )
+                # Modified part
+                if self.current_state == GraspState.LIFT:
+                    if -self.ee_action_scale < error < self.ee_action_scale:
+                        ee_action[i] = 0.0 if i < 2 else error
+                    else:
+                        ee_action[i] = np.clip(
+                            error, -self.ee_action_scale, self.ee_action_scale
+                        )
+                else:
+                    ee_action[i] = np.clip(
+                        error, -self.ee_action_scale, self.ee_action_scale
+                    )
 
         # Determine gripper action
         if self.current_state in [GraspState.GRASP, GraspState.LIFT]:
             gripper_action = 1 if self.is_google_robot else -1
+        elif self.current_state == GraspState.DESCEND:
+            gripper_action = -1 if self.is_google_robot else 1
         else:
             gripper_action = 0  # Keep gripper open
 
@@ -96,7 +119,9 @@ class GraspMotionPlanner:
         return ee_action, gripper_action
 
     def _update_state(self, position_error, orientation_error, z1, z0):
-        GRASP_THRESHOLD = 0.027 if not self.is_google_robot else 0.58
+        # GRASP_THRESHOLD = 0.027 if not self.is_google_robot else 0.58
+        # IN Grasp the bottle using panda gripper
+        GRASP_THRESHOLD = 0.001
         if self.current_state == GraspState.APPROACH:
             if (
                 np.linalg.norm(position_error[:2]) < self.dr
@@ -113,8 +138,11 @@ class GraspMotionPlanner:
             if self.gripper_pose >= GRASP_THRESHOLD:
                 self.current_state = GraspState.LIFT
         elif self.current_state == GraspState.LIFT:
-            if z1 > z0 + self.dH - 0.01:
-                pass  # Maintain lift state
+            print(f"z1: {z1}, dSH: {self.dSH}")
+            if z1 >= self.dSH - 0.01:
+                self.current_state = GraspState.FINISHED
+        elif self.current_state == GraspState.FINISHED:
+            pass  # Stay in FINISHED state
 
     def get_current_state(self):
         return self.current_state

@@ -43,10 +43,10 @@ def scale_urdf(input_file, output_file, scale_factor):
 
 # Usage
 input_file = (
-    "/home/haoyang/project/haoyang/openvlp/src/openvlp/assets/env/laptop/mobility.urdf"
+    "/home/haoyang/project/haoyang/openvlp/src/openvlp/assets/env/cart/mobility.urdf"
 )
-output_file = "/home/haoyang/project/haoyang/openvlp/src/openvlp/assets/env/laptop/scaled_output.urdf"
-scale_factor = [0.2, 0.2, 0.2]
+output_file = "/home/haoyang/project/haoyang/openvlp/src/openvlp/assets/env/cart/scaled_output.urdf"
+scale_factor = [1.0, 0.5, 0.8]
 
 scale_urdf(input_file, output_file, scale_factor)
 print(f"Scaled URDF has been saved to {output_file}")

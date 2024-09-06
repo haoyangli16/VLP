@@ -10,12 +10,12 @@ from typing import Any
 import os
 from sapien import Pose
 
-from openvlp.env.scene import SimplePullPushEnv, PullDrawerPutOrangeEnv
+from openvlp.env.scene import SimplePullPushEnv, PullDrawerPutObjectsEnv
 from openvlp.agent.planner import PullPushDrawerPlanner
 
 
 def main():
-    env = PullDrawerPutOrangeEnv(
+    env = PullDrawerPutObjectsEnv(
         render_mode="human", control_mode="pd_ee_delta_pose", robot_uids="panda"
     )
     env.reset()

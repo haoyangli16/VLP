@@ -11,8 +11,8 @@ import os
 from sapien import Pose
 
 
-@register_env("PullDrawerPutOrangeEnv-v0")
-class PullDrawerPutOrangeEnv(BaseEnv):
+@register_env("RotateBottleEnv-v0")
+class RotateBottleEnv(BaseEnv):
     SUPPORTED_ROBOTS = ["panda"]
     agent: Panda
 
@@ -45,13 +45,10 @@ class PullDrawerPutOrangeEnv(BaseEnv):
         self.ground = build_ground(self.scene)
 
     def _load_scene(self, options: dict):
-        # --------------TABLE--------------
         b = self.scene.create_actor_builder()
-        b.add_nonconvex_collision_from_file(
-            os.path.join(
-                os.path.dirname(__file__), "../../assets/env/cse_table_with_top.glb"
-            ),
-            scale=[1.0, 1.0, 0.5],
+        b.add_box_collision(
+            half_size=[1.44 / 2, 1.44 / 2, 0.79 / 4],
+            pose=sapien.Pose(p=[0.0, 0, 0.79 / 4]),
         )
         b.add_visual_from_file(
             os.path.join(
@@ -62,33 +59,24 @@ class PullDrawerPutOrangeEnv(BaseEnv):
         table = b.build_static(name="table")
         table.set_pose(sapien.Pose(p=[0.1, 0, 0.0]))
 
-        # --------------FURNITURE--------------
-        urdf_loader = self.scene.create_urdf_loader()
-        self.furniture = urdf_loader.load(
-            os.path.join(
-                os.path.dirname(__file__),
-                "../../assets/env/furniture/scaled_output.urdf",
-            )
-        )
-        self.furniture.set_pose(sapien.Pose(p=[0.55, 0, 0.68], q=[1.0, 0, 0, 0.0]))
-        for link in self.furniture.get_links():
-            link.set_mass(0.5)
-
-        # --------------ORANGE--------------
         b = self.scene.create_actor_builder()
         b.add_visual_from_file(
-            "/home/haoyang/project/haoyang/openvlp/src/openvlp/assets/models/orange/textured.dae"
+            os.path.join(
+                os.path.dirname(__file__),
+                "../../assets/models/blue_plastic_bottle/textured.dae",
+            ),
+            scale=[1.0, 1.0, 1.0],
         )
         b.add_convex_collision_from_file(
-            "/home/haoyang/project/haoyang/openvlp/src/openvlp/assets/models/orange/collision.obj"
+            os.path.join(
+                os.path.dirname(__file__),
+                "../../assets/models/blue_plastic_bottle/collision.obj",
+            ),
+            scale=[1.0, 1.0, 1.0],
         )
-        self.orange = b.build(name="orange")
-        self.orange.set_pose(
-            sapien.Pose(
-                p=[0.180308, -0.356239, 0.45],
-                q=[0.973054, -0.0466802, -0.212273, 0.0769906],
-            )
-        )
+        self.bottle = b.build(name="bottle")
+        self.bottle.set_pose(sapien.Pose(p=[0.36, 0, 0.520111], q=[1.0, 0, 0, 0]))
+        self.bottle.set_mass(0.01)
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
         pass
@@ -100,10 +88,3 @@ class PullDrawerPutOrangeEnv(BaseEnv):
         self, obs: Any, action: torch.Tensor, info: dict
     ):
         return self.compute_dense_reward(obs=obs, action=action, info=info)
-
-    def get_drawer_handle_pose(self):
-        # Assuming the drawer handle is the second link of the furniture
-        for i, link in enumerate(self.furniture.get_links()):
-            if link.get_name() == "link_0":
-                return link.pose
-        return None

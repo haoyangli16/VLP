@@ -9,7 +9,7 @@ from mani_skill.utils.sapien_utils import look_at
 from typing import Any
 import os
 from sapien import Pose
-from openvlp.env.scene.rotate_safe import RotateLaptopEnv
+from openvlp.env.scene.rotate_laptop import RotateLaptopEnv
 from openvlp.agent.planner import key_board_control
 
 
