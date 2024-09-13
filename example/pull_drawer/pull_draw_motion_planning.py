@@ -31,6 +31,7 @@ def main():
     )
 
     env.agent.robot.set_root_pose(Pose([-0.23, 0.01, 0.4], [1.0, 0, 0, 0.0]))
+
     env.agent.robot.set_qpos(
         np.array(
             [

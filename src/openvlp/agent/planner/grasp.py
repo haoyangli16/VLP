@@ -116,6 +116,8 @@ class GraspMotionPlanner:
         self._update_state(position_error, orientation_error, z1, z0)
 
         print("Current state:", self.current_state)
+        print(f"ee_action: {ee_action}")
+        print(f"gripper_action: {gripper_action}")
         return ee_action, gripper_action
 
     def _update_state(self, position_error, orientation_error, z1, z0):
@@ -129,6 +131,10 @@ class GraspMotionPlanner:
             ):
                 self.current_state = GraspState.DESCEND
         elif self.current_state == GraspState.DESCEND:
+            print(
+                f"np.linalg.norm(position_error[:2]): {np.linalg.norm(position_error[:2])}"
+            )
+            print(f"abs(z1 - (z0 + self.dh)): {abs(z1 - (z0 + self.dh))}")
             if (
                 np.linalg.norm(position_error[:2]) < self.dr
                 and abs(z1 - (z0 + self.dh)) < 0.01

@@ -20,8 +20,8 @@ def main():
         ee_rot_action_scale=0.1,
         dr=0.005,
         dH=0.1,
-        dh=-0.008,
-        dSH=0.61,
+        dh=0.018,
+        dSH=0.6,
     )
 
     moveto_planner = MoveToMotionPlanner(
@@ -32,27 +32,34 @@ def main():
         dh=0.01,
     )
 
-    env.agent.robot.set_root_pose(Pose([-0.23, 0.333, 0.4], [1.0, 0, 0, 0.0]))
+    env.agent.robot.set_root_pose(Pose([-0.23, 0.0, 0.4], [1.0, 0, 0, 0.0]))
     env.agent.robot.set_qpos(
         np.array(
             [
-                -0.38221017,
-                -0.022669552,
-                0.33722252,
-                -2.4347792,
-                0.016076842,
-                2.4140005,
-                -2.2883248,
-                0.015881803,
-                0.015881803,
+                -0.33751434,
+                -0.026580106,
+                0.29572693,
+                -2.447147,
+                0.07288136,
+                2.4581892,
+                -0.806,
+                0.015500395,
+                0.015500395,
             ]
         )
     )
 
     # Choose the target can and set the target position
+
     target_can = env.fanta_cans[3]
+    target_can.set_pose(
+        Pose(
+            [0.257912, 0.37845, 0.395999],
+            [0.707172, 0.707042, 8.75214e-05, -0.00013048],
+        )
+    )
     target_position = np.array(
-        [0.0925518, 0.876873, 0.552293]
+        [0.20237, 0.0987883, 0.445]
     )  # Example target position on the tray
     current_planner = grasp_planner
     grasping_complete = False

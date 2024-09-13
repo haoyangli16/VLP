@@ -54,12 +54,12 @@ class SimplePullPushEnv(BaseEnv):
         )
         b.add_visual_from_file(
             os.path.join(
-                os.path.dirname(__file__), "../../assets/env/cse_table_with_top.glb"
+                os.path.dirname(__file__), "../../assets/env/marbel_coffee_table.glb"
             ),
             scale=[1.0, 1.0, 0.5],
         )
         table = b.build_static(name="table")
-        table.set_pose(sapien.Pose(p=[0.1, 0, 0.0]))
+        table.set_pose(sapien.Pose(p=[-0.354662, -0.198988, 0], q=[1, 0, 0, 0]))
 
         urdf_loader = self.scene.create_urdf_loader()
 

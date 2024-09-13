@@ -11,6 +11,7 @@ from mani_skill.utils.registration import register_env
 from mani_skill.utils.sapien_utils import look_at
 from openvlp.agent.planner import (
     GraspMotionPlanner,
+    GraspState,
     PullPushDrawerPlanner,
     key_board_control,
 )
@@ -27,7 +28,7 @@ def main():
     viewer = env.render_human()
     env.viewer.paused = True
 
-    env.agent.robot.set_root_pose(Pose([-0.23, 0.01, 0.4], [1.0, 0, 0, 0.0]))
+    env.agent.robot.set_root_pose(Pose([-0.23, -0.23, 0.4], [1.0, 0, 0, 0.0]))
     env.agent.robot.set_qpos(
         np.array(
             [
@@ -63,8 +64,8 @@ def main():
     planner = GraspMotionPlanner(
         ee_action_scale=ee_action_scale,
         ee_rot_action_scale=ee_rot_action_scale,
-        dh=0.006,
-        dH=0.2,
+        dh=0.03,
+        dH=0.25,
         is_google_robot=False,
         dSH=0.6,
     )
@@ -78,28 +79,27 @@ def main():
         tcp_pose = Pose(
             p=tcp_pose.raw_pose[0].numpy()[:3], q=tcp_pose.raw_pose[0].numpy()[3:]
         )
-        object_position = env.bottle.pose.p[0].numpy()
+        object_position = env.cup.pose.p[0].numpy()
         # print(f"tcp_pose: {tcp_pose}")
         ee_action, gripper_action = planner.plan_motion(
             object_position, env.agent.robot.get_qpos()[0], tcp_pose
         )
         action_copy = action.copy()
         # Create the action dictionary
-        if idx < 300:
-            action_dict = create_action_dict(ee_action, gripper_action)
-            action = env.agent.controller.from_action_dict(action_dict)
+        # if idx < 300:
+        action_dict = create_action_dict(ee_action, gripper_action)
+        action = env.agent.controller.from_action_dict(action_dict)
 
-        else:
-            action_rot = key_board_control(
-                viewer, ee_action_scale, ee_rot_action_scale, action_copy
-            )
-            action = action_rot
-        # action[3:6] = action_rot[3:6]
-
-        # if idx > 300:
-        #     action[:3] = action_rot[:3]
-        #     action[-1] = action_rot[-1]
-
+        if planner.get_current_state() == GraspState.FINISHED:
+            # TODO: replace to a rotate motion planner (rotate target angle (like rotate 90 degree), and then stop)
+            action[5] = 0.5
+            print("finished")
+        # else:
+        #     action_rot = key_board_control(
+        #         viewer, ee_action_scale, ee_rot_action_scale, action_copy
+        #     )
+        #     action = action_rot
+        print("action", action)
         env.step(action)
         env.render_human()
         if viewer.window.key_press("q"):

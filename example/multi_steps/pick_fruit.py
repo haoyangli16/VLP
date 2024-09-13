@@ -17,7 +17,7 @@ def main():
         # shader_dir="rt",
     )
     env.reset()
-    # viewer = env.render_human()
+    viewer = env.render_human()
     # env.viewer.paused = True
 
     # Initialize video frames list
@@ -93,6 +93,7 @@ def main():
 
     env.agent.set_control_mode("pd_ee_delta_pose")
     frame_count = 0
+    viewer.paused = True
     while True:
         # Get the current poses
         object_position = target_can.pose.p[0].cpu().numpy()
@@ -124,15 +125,15 @@ def main():
             action_dict = create_action_dict(ee_action, gripper_action)
             action = env.agent.controller.from_action_dict(action_dict)
 
-        env.step(action)
+        # env.step(action)
         env.scene.update_render()
 
         # Get the camera image and add it to frames
-        rgba = env.get_camera_image(shader_dir="rt")
-        bgr = cv2.cvtColor(rgba, cv2.COLOR_RGBA2RGB)
-        frames.append(bgr)
+        # rgba = env.get_camera_image(shader_dir="rt")
+        # bgr = cv2.cvtColor(rgba, cv2.COLOR_RGBA2RGB)
+        # frames.append(bgr)
 
-        # env.render_human()
+        env.render_human()
         env.scene.update_render()
 
         print(f"Current planner: {'Grasp' if not grasping_complete else 'MoveTo'}")
@@ -161,7 +162,7 @@ def main():
         #     break
         frame_count += 1
     # Create video from frames
-    create_video(frames, "output_video.mp4", fps=30)
+    # create_video(frames, "output_video.mp4", fps=30)
 
 
 def create_action_dict(ee_action, gripper_action):

@@ -49,64 +49,46 @@ class PullDrawerPutObjectsEnv(BaseEnv):
         b = self.scene.create_actor_builder()
         b.add_nonconvex_collision_from_file(
             os.path.join(
-                os.path.dirname(__file__), "../../assets/env/convience_store.glb"
-            ),
-            scale=[0.5, 0.5, 0.5],
-        )
-        b.add_visual_from_file(
-            os.path.join(
-                os.path.dirname(__file__), "../../assets/env/convience_store.glb"
-            ),
-            scale=[0.5, 0.5, 0.5],
-        )
-        convience_store = b.build_static(name="convience_store")
-        convience_store.set_pose(
-            sapien.Pose(p=[-4.445, 0, 0.14], q=[0.707, 0.707, 0, 0.0])
-        )
-
-        b = self.scene.create_actor_builder()
-        b.add_nonconvex_collision_from_file(
-            os.path.join(
                 os.path.dirname(__file__), "../../assets/env/cse_table_with_top.glb"
             ),
             scale=[0.8, 1.0, 0.5],
         )
         b.add_visual_from_file(
             os.path.join(
-                os.path.dirname(__file__), "../../assets/env/cse_table_with_top.glb"
+                os.path.dirname(__file__), "../../assets/env/marbel_coffee_table.glb"
             ),
             scale=[0.8, 1.0, 0.5],
         )
         table = b.build_static(name="table")
-        table.set_pose(sapien.Pose(p=[0.1, 0, 0.0]))
+        table.set_pose(sapien.Pose(p=[-0.139509, 0, 0]))
 
-        # --------------FURNITURE--------------
-        urdf_loader = self.scene.create_urdf_loader()
-        self.cart = urdf_loader.load(
-            # os.path.join(
-            #     os.path.dirname(__file__),
-            #     "../../assets/env/furniture/scaled_output.urdf",
-            # )
-            "/home/haoyang/project/haoyang/openvlp/src/openvlp/assets/env/cart/scaled_output.urdf"
-        )
-        self.cart.set_pose(
-            sapien.Pose(
-                p=[0.0, 1.018 - 0.06, 0.31],  # 0.06 is the height of the cart
-                q=[1.0, 0, 0, 0.0],
-            )
-        )
-        for link in self.cart.get_links():
-            link.set_mass(0.5)
+        # # --------------FURNITURE--------------
+        # urdf_loader = self.scene.create_urdf_loader()
+        # self.cart = urdf_loader.load(
+        #     # os.path.join(
+        #     #     os.path.dirname(__file__),
+        #     #     "../../assets/env/furniture/scaled_output.urdf",
+        #     # )
+        #     "/home/haoyang/project/haoyang/openvlp/src/openvlp/assets/env/cart/scaled_output.urdf"
+        # )
+        # self.cart.set_pose(
+        #     sapien.Pose(
+        #         p=[0.0, 1.018 - 0.06, 0.31],  # 0.06 is the height of the cart
+        #         q=[1.0, 0, 0, 0.0],
+        #     )
+        # )
+        # for link in self.cart.get_links():
+        #     link.set_mass(0.5)
 
         # --------------fanta_can--------------
         b = self.scene.create_actor_builder()
         b.add_visual_from_file(
-            "/home/haoyang/project/haoyang/openvlp/src/openvlp/assets/models/fanta_can/textured.dae",
-            scale=[0.8, 0.8, 0.8],
+            os.path.join(os.path.dirname(__file__), "../../assets/env/Coffee_Cup.glb"),
+            scale=[1.5, 1.5, 1.5],
         )
         b.add_convex_collision_from_file(
-            "/home/haoyang/project/haoyang/openvlp/src/openvlp/assets/models/fanta_can/collision.obj",
-            scale=[0.8, 0.8, 0.8],
+            os.path.join(os.path.dirname(__file__), "../../assets/env/Coffee_Cup.glb"),
+            scale=[1.5, 1.5, 1.5],
         )
         self.fanta_cans = []
         for i in range(10):
@@ -114,29 +96,30 @@ class PullDrawerPutObjectsEnv(BaseEnv):
             if i < 5:
                 self.fanta_cans[-1].set_pose(
                     sapien.Pose(
-                        p=[0.111988, -0.185883 + 0.1 * i, 0.416],
-                        q=[0.707, 0, 0, 0.707],
+                        p=[0.203, -0.185883 + 0.095 * i, 0.516],
+                        q=[0.707, 0.707, 0, 0],
                     )
                 )
             else:
                 self.fanta_cans[-1].set_pose(
                     sapien.Pose(
-                        p=[0.0, -0.185883 + 0.1 * (i - 5), 0.416],
-                        q=[0.707, 0, 0, 0.707],
+                        p=[0.095, -0.185883 + 0.095 * (i - 5), 0.516],
+                        q=[0.707, 0.707, 0, 0],
                     )
                 )
             self.fanta_cans[-1].set_mass(0.02)
 
         b = self.scene.create_actor_builder()
         b.add_visual_from_file(
-            "/home/haoyang/project/haoyang/openvlp/src/openvlp/assets/models/tray/tray.glb",
-            scale=[1.5, 1.0, 1.0],
+            os.path.join(os.path.dirname(__file__), "../../assets/env/wood_tray.glb"),
+            scale=[1.0, 1.0, 1.0],
         )
-        # b.add_convex_collision_from_file(
-        #     "/home/haoyang/project/haoyang/openvlp/src/openvlp/assets/models/tray/tray.glb",
-        # )
+        b.add_nonconvex_collision_from_file(
+            os.path.join(os.path.dirname(__file__), "../../assets/env/wood_tray.glb"),
+            scale=[1.0, 1.0, 1.0],
+        )
         self.tray = b.build_static(name="tray")
-        self.tray.set_pose(sapien.Pose(p=[0.1, 0, 0.385], q=[0.5, 0.5, 0.5, 0.5]))
+        self.tray.set_pose(sapien.Pose(p=[0.14, 0, 0.385], q=[0.5, 0.5, 0.5, 0.5]))
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
         pass
