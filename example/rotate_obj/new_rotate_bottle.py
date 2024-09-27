@@ -19,6 +19,8 @@ from openvlp.agent.utils import create_action_dict, get_tcp_pose
 from openvlp.env.scene import RotateBottleEnv
 from sapien import Pose
 
+import cv2
+
 
 def main():
     env = RotateBottleEnv(
@@ -59,6 +61,8 @@ def main():
         dSH=0.6,
     )
 
+    frames = []
+
     while True:
         tcp_pose = env.agent.tcp.pose
         tcp_pose = Pose(
@@ -77,9 +81,13 @@ def main():
         print(f"Current state: {rotate_planner.get_current_state()}")
         print(f"Action: {action}")
 
-        # env.step(action)
+        env.step(action)
         env.render_human()
 
+        # Get the camera image and add it to frames
+        rgba = env.get_camera_image(shader_dir="rt")
+        bgr = 255 * cv2.cvtColor(rgba, cv2.COLOR_RGBA2RGB)
+        frames.append(bgr)
         if rotate_planner.get_current_state() == RotateState.FINISHED:
             print("Rotation completed!")
             break
@@ -88,6 +96,20 @@ def main():
             break
 
         idx += 1
+    # Create video from frames
+    create_video(frames, "output_video_rotate_bottle.mp4", fps=30)
+
+
+from moviepy.editor import VideoClip
+
+
+def create_video(frames, output_file, fps=30):
+    def make_frame(t):
+        return frames[int(t * fps)]
+
+    clip = VideoClip(make_frame, duration=len(frames) / fps)
+    clip.write_videofile(output_file, fps=fps)
+    print(f"Video saved as {output_file}")
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ from sapien import Pose
 from openvlp.env.scene import PullDrawerPutObjectsEnv
 from openvlp.agent.planner.grasp import GraspMotionPlanner, GraspState
 from openvlp.agent.planner.moveto import MoveToMotionPlanner, MoveToState
+import cv2
 
 
 def main():
@@ -63,6 +64,8 @@ def main():
     )  # Example target position on the tray
     current_planner = grasp_planner
     grasping_complete = False
+    frame_count = 0
+    frames = []
 
     while True:
         # Get the current poses
@@ -98,6 +101,11 @@ def main():
         env.step(action)
         env.render_human()
 
+        # Get the camera image and add it to frames
+        rgba = env.get_camera_image(shader_dir="rt")
+        bgr = 255 * cv2.cvtColor(rgba, cv2.COLOR_RGBA2RGB)
+        frames.append(bgr)
+
         if viewer.window.key_press("q"):
             break
 
@@ -123,12 +131,28 @@ def main():
                 print("Object picked and placed successfully!")
                 break
 
+        frame_count += 1
+    # Create video from frames
+    create_video(frames, "output_video_put_objects.mp4", fps=30)
+
 
 def create_action_dict(ee_action, gripper_action):
     return {
         "arm": ee_action,
         "gripper": np.array([gripper_action]),
     }
+
+
+from moviepy.editor import VideoClip
+
+
+def create_video(frames, output_file, fps=30):
+    def make_frame(t):
+        return frames[int(t * fps)]
+
+    clip = VideoClip(make_frame, duration=len(frames) / fps)
+    clip.write_videofile(output_file, fps=fps)
+    print(f"Video saved as {output_file}")
 
 
 if __name__ == "__main__":

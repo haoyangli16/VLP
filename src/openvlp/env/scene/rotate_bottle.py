@@ -37,6 +37,72 @@ class RotateBottleEnv(BaseEnv):
         **kwargs,
     ):
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
+        self._setup_camera(shader_dir="default")
+        # self.scene.set_ambient_light([5.0, 5.0, 5.0])
+
+    def _setup_camera(self, shader_dir="default"):
+        from mani_skill.envs.sapien_env import Camera, CameraConfig
+        from sapien import Pose
+        from mani_skill.render.shaders import ShaderConfig
+
+        if shader_dir == "rt":
+            pass
+            # shader_config = ShaderConfig(
+            #     shader_pack="rt",
+            #     texture_names={
+            #         "Color": ["rgb"],
+            #     },
+            #     shader_pack_config={
+            #         "ray_tracing_samples_per_pixel": 128,
+            #         "ray_tracing_path_depth": 16,
+            #         "ray_tracing_denoiser": "optix",
+            #         # "ray_tracing_exposure": 5.6,
+            #     },
+            #     texture_transforms={
+            #         "Color": lambda data: {
+            #             "rgb": (data[..., :3] * 255).to(torch.uint8)
+            #         },
+            #     },
+            # )
+
+            # camera = Camera(
+            #     CameraConfig(
+            #         "cam",
+            #         Pose(),
+            #         width=1920,
+            #         height=1080,
+            #         fov=1.17,
+            #         near=0.1,
+            #         far=1e03,
+            #         # shader_pack="rt",
+            #         shader_config=shader_config,
+            #     ),  # type: ignore
+            #     self.scene,
+            # )
+            # camera.camera.set_property("exposure", 6.2)
+
+        elif shader_dir == "default":
+            camera = Camera(
+                CameraConfig(
+                    "cam",
+                    Pose(),
+                    width=1920,
+                    height=1080,
+                    fov=1.17,
+                    near=0.1,
+                    far=1e03,
+                ),  # type: ignore
+                self.scene,
+            )
+
+        camera.camera.set_local_pose(
+            Pose(
+                [-0.330264, -0.914049, 1.18514],
+                [0.855213, -0.123984, 0.239695, 0.442476],
+            )
+        )
+
+        self.scene.sensors = {"cam": camera}
 
     def _setup_scene(self):
         super()._setup_scene()
@@ -57,7 +123,8 @@ class RotateBottleEnv(BaseEnv):
             scale=[1.0, 1.0, 0.5],
         )
         table = b.build_static(name="table")
-        table.set_pose(sapien.Pose(p=[-0.354662, -0.198988, 0], q=[1, 0, 0, 0]))
+        # table.set_pose(sapien.Pose(p=[-0.354662, -0.198988, 0], q=[1, 0, 0, 0]))
+        table.set_pose(sapien.Pose(p=[0.1, 0, 0.0]))
 
         # b = self.scene.create_actor_builder()
         # b.add_visual_from_file(
@@ -142,3 +209,20 @@ class RotateBottleEnv(BaseEnv):
         self, obs: Any, action: torch.Tensor, info: dict
     ):
         return self.compute_dense_reward(obs=obs, action=action, info=info)
+
+    def get_camera_image(self, shader_dir="default"):
+        self.scene.sensors["cam"].camera.take_picture()
+        rgba = self.scene.sensors["cam"].camera.get_picture("Color")[0]  # [H, W, 4]
+
+        rgba = rgba.cpu().numpy()
+        if shader_dir == "rt":
+            rgba = 255 * rgba
+        rgba = rgba.astype(np.uint8)
+        if len(rgba.shape) != 3 or rgba.shape[2] != 4:
+            rgba = rgba.reshape(
+                self.scene.sensors["cam"].camera.height,
+                self.scene.sensors["cam"].camera.width,
+                4,
+            )
+
+        return rgba

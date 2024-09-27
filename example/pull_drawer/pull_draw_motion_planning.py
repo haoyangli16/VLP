@@ -12,6 +12,7 @@ from sapien import Pose
 
 from openvlp.env.scene import SimplePullPushEnv
 from openvlp.agent.planner import PullPushDrawerPlanner
+import cv2
 
 
 def main():
@@ -62,6 +63,7 @@ def main():
     )
     action = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.02])
     idx = 0
+    frames = []
 
     while True:
         # Get the current poses
@@ -81,8 +83,15 @@ def main():
         import torch
 
         action = env.agent.controller.from_action_dict(action_dict)
+
         env.step(action)
         env.render_human()
+
+        # Get the camera image and add it to frames
+        rgba = env.get_camera_image(shader_dir="rt")
+        bgr = 255 * cv2.cvtColor(rgba, cv2.COLOR_RGBA2RGB)
+        frames.append(bgr)
+
         if viewer.window.key_press("q"):
             break
 
@@ -91,6 +100,21 @@ def main():
         # print(f"Gripper Action: {gripper_action}")
 
         idx += 1
+
+    # Create video from frames
+    create_video(frames, "output_vide_pull_drawer.mp4", fps=30)
+
+
+from moviepy.editor import VideoClip
+
+
+def create_video(frames, output_file, fps=30):
+    def make_frame(t):
+        return frames[int(t * fps)]
+
+    clip = VideoClip(make_frame, duration=len(frames) / fps)
+    clip.write_videofile(output_file, fps=fps)
+    print(f"Video saved as {output_file}")
 
 
 def get_tcp_pose(env):
